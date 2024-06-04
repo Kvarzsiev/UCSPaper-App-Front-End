@@ -4,21 +4,22 @@ import { api } from "../../../services/api";
 import { RootState } from "../../store";
 import { BaseResultToSave, saveResult } from "./resultSlice";
 
-export const findAllProjects = createAsyncThunk("app/projects/findAllProjects", async () => {
-    const response = await api.get("/projects");
+export const findAllProjects = createAsyncThunk("app/projects/findAllProjects", async (areaId?: string) => {
+    console.log(areaId);
+    const response = await api.get("/projects", { params: { areaId } });
     return response.data;
 });
 
 interface DeletePeopleFromProject {
-    projectId: number;
-    personsIds: number[];
+    projectId: string;
+    personsIds: string[];
 }
 
 export const deletePeopleFromProject = createAsyncThunk(
     "app/projects/deleteProjectsById",
     async ({ projectId, personsIds }: DeletePeopleFromProject) => {
         await api.delete(`/projects/persons/${projectId}`, { data: { personsIds } });
-    }
+    },
 );
 
 export const deleteProjectsById = createAsyncThunk(
@@ -26,7 +27,7 @@ export const deleteProjectsById = createAsyncThunk(
     async (ids: Project["id"][], { dispatch }) => {
         await Promise.all(ids.map((id) => api.delete(`/projects/${id}`)));
         dispatch(findAllProjects());
-    }
+    },
 );
 
 export const changeProjectStatus = createAsyncThunk("app/project/changeProjectStatus", async (project: Project) => {
@@ -36,7 +37,10 @@ export const changeProjectStatus = createAsyncThunk("app/project/changeProjectSt
     return { ...project, isFinished: !project.isFinished };
 });
 
-type SaveProjectParams = Omit<Partial<Project>, "persons"> & { persons: { id: number; role: string }[] };
+type SaveProjectParams = Omit<Partial<Project>, "persons" | "areas"> & {
+    persons: { id: string; role: string }[];
+    areas: string[];
+};
 export const saveProject = createAsyncThunk(
     "app/project/saveProject",
     async (payload: SaveProjectParams, { dispatch, getState, rejectWithValue }) => {
@@ -48,7 +52,6 @@ export const saveProject = createAsyncThunk(
                 startDate: payload.startDate,
                 description: payload.description,
                 sponsor: payload.sponsor,
-                persons: payload.persons,
             });
             project = response.data;
         } else {
@@ -64,19 +67,25 @@ export const saveProject = createAsyncThunk(
             });
         }
 
+        if (payload.areas.length) {
+            await api.put(`/projects/areas/${projectId}`, {
+                areas: payload.areas,
+            });
+        }
+
         const pendingResultsToSave = (getState() as RootState).projects.pendingResultsToSave;
         if (pendingResultsToSave.length) {
             const responses = await Promise.all(
                 pendingResultsToSave.map((resultToSave) =>
-                    dispatch(saveResult({ ...resultToSave, projectId: projectId }))
-                )
+                    dispatch(saveResult({ ...resultToSave, projectId: projectId })),
+                ),
             );
             const rejectedResponse = responses.find((thunkResult) => saveResult.rejected.match(thunkResult));
             if (rejectedResponse) return rejectWithValue("Não foi possível salvar um dos resultados");
         }
         dispatch(findAllProjects());
         return project;
-    }
+    },
 );
 
 export const projectSlice = createSlice({
@@ -101,7 +110,7 @@ export const projectSlice = createSlice({
                           ...project,
                           persons: project.persons?.filter((person) => !action.meta.arg.personsIds.includes(person.id)),
                       }
-                    : project
+                    : project,
             );
         });
         builder.addCase(findAllProjects.fulfilled, (state, action) => {
@@ -109,7 +118,7 @@ export const projectSlice = createSlice({
         });
         builder.addCase(changeProjectStatus.fulfilled, (state, action) => {
             state.projects = state.projects.map((project) =>
-                project.id === action.meta.arg.id ? action.payload : project
+                project.id === action.meta.arg.id ? action.payload : project,
             );
         });
         builder.addCase(saveProject.fulfilled, (state) => {

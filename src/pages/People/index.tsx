@@ -18,7 +18,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Person } from "../../shared/@types/Person";
 import { savePerson, findAllPersons } from "../../shared/store/modules/cruds/personSlice";
 import { AppDispatch, RootState } from "../../shared/store/store";
-import { FiPlus, FiPlusSquare } from "react-icons/fi";
+import { FiPlus } from "react-icons/fi";
 
 export const Pessoas: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -79,7 +79,7 @@ export const Pessoas: React.FC = () => {
               (row) =>
                 row.email?.toLowerCase().includes(filters.email) &&
                 row.name?.toLowerCase().includes(filters.name) &&
-                row.institution?.toLowerCase().includes(filters.insituition)
+                row.institution?.toLowerCase().includes(filters.insituition),
             )}
             onRowClick={(p) => setPersonToEdit(p.row)}
             disableRowSelectionOnClick
@@ -175,6 +175,10 @@ const PersonDialogForm: React.FC<PersonDialogFormProps> = ({ person, ...props })
     setValue("name", person.name ?? "");
   }, [person]);
 
+  const validateNotEmptyOrSpaces = (value: string) => {
+    return value.trim() !== "" || "Preencha o campo obrigatório!";
+  };
+
   return (
     <>
       <Dialog maxWidth="md" fullWidth {...props} onClose={handleClose}>
@@ -188,6 +192,14 @@ const PersonDialogForm: React.FC<PersonDialogFormProps> = ({ person, ...props })
             <Controller
               control={control}
               name="email"
+              rules={{
+                required: "O e-mail é obrigatório!",
+                pattern: {
+                  value: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/,
+                  message: "E-mail inválido!",
+                },
+                validate: validateNotEmptyOrSpaces,
+              }}
               render={({ field }) => (
                 <TextField
                   {...field}
@@ -202,6 +214,10 @@ const PersonDialogForm: React.FC<PersonDialogFormProps> = ({ person, ...props })
             <Controller
               control={control}
               name="name"
+              rules={{
+                required: "O nome é obrigatório!",
+                validate: validateNotEmptyOrSpaces,
+              }}
               render={({ field }) => (
                 <TextField {...field} label="Nome" error={!!errors.name} helperText={errors.name?.message ?? ""} />
               )}

@@ -166,7 +166,7 @@ export const ResultDialogForm: React.FC<ResultDialogFormProps> = ({ open, onClos
     setIsAddPersonMode(false);
   };
 
-  const withFixedProject = <T extends any>(arr: T[]) => (fixedProject ? [fixedProject, ...arr] : arr);
+  const withFixedProject = <T extends object>(arr: T[]) => (fixedProject ? [fixedProject, ...arr] : arr);
 
   return (
     <Dialog open={open} maxWidth="md" fullWidth onClose={handleClose}>
@@ -258,7 +258,7 @@ export const ResultDialogForm: React.FC<ResultDialogFormProps> = ({ open, onClos
                     } transition-all`}
                     options={
                       wProject?.persons?.filter(
-                        (personOption) => !people?.find((person) => person.id === personOption.id)
+                        (personOption) => !people?.find((person) => person.id === personOption.id),
                       ) ?? []
                     }
                     noOptionsText={

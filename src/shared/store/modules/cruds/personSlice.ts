@@ -11,7 +11,7 @@ interface AddPersonParams {
     email: string;
     name: string;
     institution: string;
-    id?: number;
+    id?: string;
 }
 
 export const savePerson = createAsyncThunk("app/person/savePerson", async (payload: AddPersonParams) => {

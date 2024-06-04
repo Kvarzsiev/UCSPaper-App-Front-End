@@ -38,7 +38,7 @@ import {
 import { AppDispatch, RootState } from "../../shared/store/store";
 import { confirmationToast } from "../../shared/utils/Utils";
 import { ProjectDialogForm } from "./ProjectDialog";
-import { deleteResultsById } from "../../shared/store/modules/cruds/resultSlice";
+// import { deleteResultsById } from "../../shared/store/modules/cruds/resultSlice";
 
 const statusFilter = {
   all: "2",
@@ -154,7 +154,7 @@ export const Projetos: React.FC = () => {
     event.stopPropagation();
     if (
       !(await confirmationToast(
-        `Tem certeza que quer marcar o projeto ${project.title} como ${project.isFinished ? "não" : ""} finalizado?`
+        `Tem certeza que quer marcar o projeto ${project.title} como ${project.isFinished ? "não" : ""} finalizado?`,
       ))
     )
       return;
@@ -182,7 +182,7 @@ export const Projetos: React.FC = () => {
               <small>{deleteChildrenMsg}</small>
             </div>
           )}
-        </>
+        </>,
       ))
     )
       return;
@@ -273,7 +273,7 @@ export const Projetos: React.FC = () => {
                 (filters.isFinished === statusFilter.all ||
                   (filters.isFinished === statusFilter.onGoing && !row.isFinished) ||
                   (filters.isFinished === statusFilter.finished && row.isFinished)) &&
-                (!filters.sponsor || row.sponsor?.toLocaleLowerCase().includes(filters.sponsor.toLocaleLowerCase()))
+                (!filters.sponsor || row.sponsor?.toLocaleLowerCase().includes(filters.sponsor.toLocaleLowerCase())),
             )}
             onRowClick={(p) => setProjectToEdit(p.row)}
             disableRowSelectionOnClick

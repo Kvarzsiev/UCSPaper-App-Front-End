@@ -36,6 +36,7 @@ import {
 import { AppDispatch } from "../../shared/store/store";
 import { IfPresent, isTruthy } from "../../shared/utils/Utils";
 import { ProjectResultsTab } from "./ProjectResultsTab";
+import { Area } from "../../shared/@types/Area";
 
 interface DefaultValues {
   description: string;
@@ -76,6 +77,9 @@ export const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ project, .
   // People list
   const [people, setPeople] = useState<Project["persons"]>([]);
   const [personToAdd, setPersonToAdd] = useState<Person | null>(null);
+  // Area list
+  const [areas, setArea] = useState<Project["areas"]>([]);
+  const [areaToAdd, setAreaToAdd] = useState<Area[]>([]);
   // Results list
   const [results, setResults] = useState<Result[]>([]);
   // Seleção pendente da implementação de deleção de registros no backend
@@ -97,19 +101,35 @@ export const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ project, .
 
   const wTitle = watch("title");
 
+  useEffect(() => {
+    console.log("project", project);
+    if (project && project?.areas.length > 0) {
+      setAreaToAdd(project?.areas);
+
+      console.log("areatoadd", areaToAdd);
+    }
+  }, [project?.areas]);
+
   const { data: peopleAutocompleteData } = useQuery("people", async () => {
     const { data } = await api.get<Person[]>("/persons");
     return data ?? [];
   });
 
+  const { data: areaAutocompleteData } = useQuery("area", async () => {
+    const { data } = await api.get<Area[]>("/areas");
+    return data ?? [];
+  });
+
   const handleSave = async (data: DefaultValues) => {
     const toastId = toast.loading("Salvando dados...");
+
     const peopleToSave = unsavedPeopleIds
       .map((unsId) => {
         const person = people?.find((person) => person.id === unsId);
         return person ? { id: person.id, role: person.role } : null;
       })
       .filter(isTruthy);
+
     const result = await dispatch(
       saveProject({
         ...data,
@@ -118,7 +138,8 @@ export const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ project, .
         finishDate: data.finishDate ?? undefined,
         title: data.title,
         persons: peopleToSave,
-      })
+        areas: areaToAdd ? areaToAdd.map((areaToAdd) => areaToAdd.id) : [],
+      }),
     );
 
     if (saveProject.rejected.match(result)) {
@@ -140,7 +161,9 @@ export const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ project, .
     reset(defaultValues);
     handleResetAddPersonMode();
     setPeople([]);
+    setArea([]);
     setResults([]);
+    setUnsavedPeopleIds([]);
     setUnsavedPeopleIds([]);
     dispatch(resetResulstToSave());
   };
@@ -148,9 +171,11 @@ export const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ project, .
   useEffect(() => {
     if (!project) {
       setPeople([]);
+      setArea([]);
       return;
     }
     setPeople(project.persons ?? []);
+    setArea(project.areas ?? []);
     setResults(project.results);
     reset({
       description: project.description ?? "",
@@ -188,7 +213,7 @@ export const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ project, .
 
   const handleChangeRole = (id: Person["id"], newRole: RoleOption) => {
     setPeople((peopleState) =>
-      peopleState?.map((person) => (person.id === id ? { ...person, role: newRole.role } : person))
+      peopleState?.map((person) => (person.id === id ? { ...person, role: newRole.role } : person)),
     );
     if (!unsavedPeopleIds.includes(id)) setUnsavedPeopleIds((state) => [...state, id]);
   };
@@ -209,16 +234,9 @@ export const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ project, .
       updateList();
       return;
     }
-    // const { idsToDeleteDb, idsToDeleteState } = people.reduce(
-    //   (acc, curr) => ({
-    //     idsToDeleteDb: [...acc.idsToDEleteDb, ids], idsToDeleteState: []
-    //   }),
-    //   { idsToDeleteDb: [], idsToDeleteState: [] }
-    // );
-    const idsToDelete = selectedPeopleIds.filter((id) => id >= 0);
 
     const toastId = toast.loading("Carregando dados ");
-    const result = await dispatch(deletePeopleFromProject({ personsIds: idsToDelete, projectId: project?.id }));
+    const result = await dispatch(deletePeopleFromProject({ personsIds: selectedPeopleIds, projectId: project?.id }));
 
     if (deletePeopleFromProject.rejected.match(result)) {
       toast.error("Não foi possível excluir os registros");
@@ -249,58 +267,72 @@ export const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ project, .
             onSubmit={handleSubmit(handleSave)}
             className="flex flex-col w-full justify-center gap-4 py-4"
           >
-            <div className="flex flex-col gap-4 w-full justify-around">
-              <Controller
-                control={control}
-                name="title"
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    disabled={project?.isFinished}
-                    className="max-w-5xl"
-                    label="Título*"
-                    placeholder="Título do projeto"
-                    error={!!errors.title}
-                    helperText={errors.title?.message ?? ""}
-                  />
-                )}
-              />
-              <Controller
-                control={control}
-                name="description"
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    disabled={project?.isFinished}
-                    multiline
-                    className="max-w-5xl"
-                    size="small"
-                    rows={6}
-                    label="Descrição*"
-                    placeholder="Descreva aqui detalhes do seu projeto..."
-                    error={!!errors.description}
-                    helperText={errors.description?.message ?? ""}
-                  />
-                )}
-              />
+            <div className="flex">
+              <div className="flex flex-col gap-4 w-full justify-around ">
+                <Controller
+                  control={control}
+                  name="title"
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      disabled={project?.isFinished}
+                      className="max-w-4xl"
+                      label="Título*"
+                      placeholder="Título do projeto"
+                      error={!!errors.title}
+                      helperText={errors.title?.message ?? ""}
+                    />
+                  )}
+                />
+                <Controller
+                  control={control}
+                  name="description"
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      disabled={project?.isFinished}
+                      multiline
+                      className="max-w-4xl"
+                      size="small"
+                      rows={6}
+                      label="Descrição*"
+                      placeholder="Descreva aqui detalhes do seu projeto..."
+                      error={!!errors.description}
+                      helperText={errors.description?.message ?? ""}
+                    />
+                  )}
+                />
 
-              <Controller
-                control={control}
-                name="sponsor"
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    disabled={project?.isFinished}
-                    className="max-w-xs"
-                    label="Patrocinador"
-                    placeholder="Financiador do projeto"
-                    error={!!errors.sponsor}
-                    helperText={errors.sponsor?.message ?? ""}
-                  />
-                )}
+                <Controller
+                  control={control}
+                  name="sponsor"
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      disabled={project?.isFinished}
+                      className="max-w-xs mr-2"
+                      label="Patrocinador"
+                      placeholder="Financiador do projeto"
+                      error={!!errors.sponsor}
+                      helperText={errors.sponsor?.message ?? ""}
+                    />
+                  )}
+                />
+              </div>
+              <Autocomplete
+                multiple
+                value={areaToAdd}
+                onChange={(_e, newValue) => setAreaToAdd(newValue)}
+                fullWidth
+                className="max-w-xl"
+                options={
+                  areaAutocompleteData?.filter((areaOption) => !areas?.find((area) => area.id === areaOption.id)) ?? []
+                }
+                getOptionLabel={(option) => `${option.name}`}
+                renderInput={(params) => <TextField {...params} label="Áreas" />}
               />
             </div>
             <div className="flex gap-2 w-full items-center">
@@ -392,10 +424,10 @@ export const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ project, .
                     } transition-all`}
                     options={
                       peopleAutocompleteData?.filter(
-                        (personOption) => !people?.find((person) => person.id === personOption.id)
+                        (personOption) => !people?.find((person) => person.id === personOption.id),
                       ) ?? []
                     }
-                    getOptionLabel={(option) => `${option.id} - ${option.name}`}
+                    getOptionLabel={(option) => `${option.email}`}
                     renderInput={(params) => <TextField {...params} size="small" label="Pessoa" />}
                   />
                 </div>
@@ -429,7 +461,7 @@ export const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ project, .
                 ]}
                 checkboxSelection
                 rowSelectionModel={selectedPeopleIds}
-                onRowSelectionModelChange={(newSelectionModel) => setSelectedPeopleIds(newSelectionModel as number[])}
+                onRowSelectionModelChange={(newSelectionModel) => setSelectedPeopleIds(newSelectionModel as string[])}
                 paginationModel={paginationModel}
                 onPaginationModelChange={setPaginationModel}
               />

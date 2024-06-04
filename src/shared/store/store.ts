@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authSlice from "./modules/auth/authSlice";
+import areaSlice from "./modules/cruds/areaSlice";
 import personSlice from "./modules/cruds/personSlice";
 import projectSlice from "./modules/cruds/projectsSlice";
 import resultSlice from "./modules/cruds/resultSlice";
@@ -8,6 +9,7 @@ export const store = configureStore({
     reducer: {
         auth: authSlice,
         persons: personSlice,
+        areas: areaSlice,
         projects: projectSlice,
         results: resultSlice,
     },

@@ -1,13 +1,13 @@
 import { FiPackage, FiUser } from "react-icons/fi";
 import { useQuery } from "react-query";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom"; //useNavigate
 import { Project } from "../../shared/@types/Project";
 import { ListTooltip } from "../../shared/components/ListTooltip";
 import { api } from "../../shared/services/api";
 import { useEffect } from "react";
 
 export const Home = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const { data: projects } = useQuery("projects", async () => {
     const response = await api.get<Project[]>("/projects");
@@ -31,7 +31,7 @@ export const Home = () => {
             <div
               key={project.id}
               className="relative cursor-pointer hover:bg-[#f9f9f9] transition-all hover:shadow-md overflow-hidden font-arial flex flex-col gap-2 rounded-md bg-white p-6 shadow-sm"
-              onClick={() => navigate(`/overview/${project.id}`)}
+              // onClick={() => navigate(`/overview/${project.id}`)}
             >
               <div className="grid grid-cols-[1fr_125px]">
                 <div className="flex flex-col gap-2">
