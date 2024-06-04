@@ -102,11 +102,10 @@ export const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ project, .
   const wTitle = watch("title");
 
   useEffect(() => {
-    console.log("project", project);
     if (project && project?.areas.length > 0) {
       setAreaToAdd(project?.areas);
-
-      console.log("areatoadd", areaToAdd);
+    } else {
+      setAreaToAdd([]);
     }
   }, [project?.areas]);
 
