@@ -2,6 +2,7 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Autocomplete,
   Button,
   Checkbox,
   FormControl,
@@ -38,7 +39,8 @@ import {
 import { AppDispatch, RootState } from "../../shared/store/store";
 import { confirmationToast } from "../../shared/utils/Utils";
 import { ProjectDialogForm } from "./ProjectDialog";
-// import { deleteResultsById } from "../../shared/store/modules/cruds/resultSlice";
+import { Area } from "../../shared/@types/Area";
+import { findAllAreas } from "../../shared/store/modules/cruds/areaSlice";
 
 const statusFilter = {
   all: "2",
@@ -126,7 +128,11 @@ export const Projetos: React.FC = () => {
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({ page: 0, pageSize: 10 });
   const [rowSelectionModel, setRowSelectionModel] = useState<Project["id"][]>([]);
 
+  // Area list
+  const [areaFilter, setAreaFilter] = useState<Area | null>(null);
+
   const projects = useSelector<RootState, Project[]>((state) => state.projects.projects);
+  const areas = useSelector<RootState, Area[]>((state) => state.areas.areas);
 
   const [filters, setFilters] = useState({
     description: "",
@@ -146,6 +152,18 @@ export const Projetos: React.FC = () => {
       .finally(() => toast.dismiss(toastId));
   }, []);
 
+  useEffect(() => {
+    dispatch(findAllAreas())
+      .unwrap()
+      .catch(() => toast.error("Não foi possível buscar as áreas"));
+  }, []);
+
+  const handleFilterInputChange = (_event: any, newInputValue: Area | null) => {
+    setAreaFilter(newInputValue);
+    if (newInputValue) {
+      dispatch(findAllProjects(newInputValue.id));
+    }
+  };
   const updateFilter = (field: keyof typeof filters, value: (typeof filters)[typeof field]) => {
     setFilters((state) => ({ ...state, [field]: value }));
   };
@@ -224,6 +242,7 @@ export const Projetos: React.FC = () => {
                   </RadioGroup>
                 </FormControl>
               </div>
+
               <div className="grid gap-4 w-full grid-cols-2 my-4">
                 <TextField
                   label="Descrição"
@@ -234,6 +253,17 @@ export const Projetos: React.FC = () => {
                   label="Patrocinador"
                   value={filters.sponsor}
                   onChange={(e) => updateFilter("sponsor", e.target.value)}
+                />
+              </div>
+              <div className="grid gap-4 w-full grid-cols-2 mb-4">
+                <Autocomplete
+                  value={areaFilter}
+                  onChange={handleFilterInputChange}
+                  fullWidth
+                  className="max-w-xl"
+                  options={areas}
+                  getOptionLabel={(option) => `${option.name}`}
+                  renderInput={(params) => <TextField {...params} label="Áreas" />}
                 />
               </div>
               <div className="grid grid-cols-[repeat(4,auto)] items-center gap-2">
