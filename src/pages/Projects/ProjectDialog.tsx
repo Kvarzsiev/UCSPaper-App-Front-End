@@ -326,7 +326,7 @@ export const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ project, .
                 value={areaToAdd}
                 onChange={(_e, newValue) => setAreaToAdd(newValue)}
                 fullWidth
-                className="max-w-xl"
+                className="max-w-xl ml-3"
                 options={
                   areaAutocompleteData?.filter((areaOption) => !areas?.find((area) => area.id === areaOption.id)) ?? []
                 }
