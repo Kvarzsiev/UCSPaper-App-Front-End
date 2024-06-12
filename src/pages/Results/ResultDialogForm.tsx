@@ -174,7 +174,7 @@ export const ResultDialogForm: React.FC<ResultDialogFormProps> = ({ open, onClos
       <DialogContent>
         <form onSubmit={handleSubmit(handleSaveResult)} id="resultsForm">
           <div className="flex flex-col gap-10">
-            <div className="flex justify-between pt-3 flex-col gap-4 xssm:flex-row">
+            <div className="flex justify-between pt-3 gap-4 xssm:flex-row">
               <Controller
                 control={control}
                 name="description"
@@ -183,6 +183,7 @@ export const ResultDialogForm: React.FC<ResultDialogFormProps> = ({ open, onClos
                     {...field}
                     label="Descrição"
                     placeholder="Software do projeto"
+                    className="w-1/2"
                     error={!!errors.description}
                     helperText={errors.description?.message ?? ""}
                   />
@@ -197,8 +198,7 @@ export const ResultDialogForm: React.FC<ResultDialogFormProps> = ({ open, onClos
                     disabled={!!(fixedProject ?? result?.id)}
                     options={withFixedProject(projectsAutocompleteData ?? [])}
                     value={field.value}
-                    fullWidth
-                    className="xssm:max-w-xs"
+                    className="w-1/2"
                     onChange={(_e, newValue) => {
                       if (personToAdd) setPersonToAdd(null);
                       if (!newValue && isAddPersonMode) setIsAddPersonMode(false);
@@ -264,7 +264,7 @@ export const ResultDialogForm: React.FC<ResultDialogFormProps> = ({ open, onClos
                     noOptionsText={
                       wProject?.persons?.length ? "Nenhum registro encontrado" : "Nenhuma pessoa cadastrada no projeto"
                     }
-                    getOptionLabel={(option) => `${option.id} - ${option.name}`}
+                    getOptionLabel={(option) => `${option.email}`}
                     renderInput={(params) => (
                       <TextField
                         {...params}
