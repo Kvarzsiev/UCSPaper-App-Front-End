@@ -1,4 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import { CurrencyInput } from "react-currency-mask";
 import {
   Autocomplete,
   Button,
@@ -41,8 +42,9 @@ import { Area } from "../../shared/@types/Area";
 interface DefaultValues {
   description: string;
   sponsor: string;
+  sponsoredValue?: string;
   isFinished: boolean;
-  startDate: Date | null;
+  startDate: Date;
   finishDate: Date | null;
   title: string;
 }
@@ -54,12 +56,17 @@ const defaultValues: DefaultValues = {
   description: "",
   isFinished: false,
   sponsor: "",
+  sponsoredValue: "",
   finishDate: null,
   startDate: new Date(),
   title: "",
 };
 const schema = object({
+  title: string().required("Informe um título"),
   description: string().required("Informe uma descrição"),
+  sponsor: string().nullable(),
+  sponsoredValue: string().nullable().optional(),
+  // isFinished: bool(),
   startDate: date().required("Informe um início").typeError("Data inválida"),
   finishDate: date().nullable().min(ref("startDate"), "Data final deve ser depois do início"),
 });
@@ -96,7 +103,7 @@ export const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ project, .
     watch,
   } = useForm<DefaultValues>({
     defaultValues,
-    resolver: yupResolver(schema),
+    resolver: yupResolver<any>(schema),
   });
 
   const wTitle = watch("title");
@@ -181,7 +188,7 @@ export const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ project, .
       finishDate: project.finishDate ?? null,
       isFinished: project.isFinished ?? 0,
       sponsor: project.sponsor ?? "",
-      startDate: project.startDate ?? null,
+      startDate: project.startDate ?? undefined,
       title: project.title,
     });
   }, [project]);
@@ -304,22 +311,48 @@ export const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ project, .
                   )}
                 />
 
-                <Controller
-                  control={control}
-                  name="sponsor"
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      fullWidth
-                      disabled={project?.isFinished}
-                      className="max-w-xs mr-2"
-                      label="Patrocinador"
-                      placeholder="Financiador do projeto"
-                      error={!!errors.sponsor}
-                      helperText={errors.sponsor?.message ?? ""}
-                    />
-                  )}
-                />
+                <div>
+                  <Controller
+                    control={control}
+                    name="sponsor"
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        fullWidth
+                        disabled={project?.isFinished}
+                        className="max-w-xs mr-2"
+                        label="Patrocinador"
+                        placeholder="Financiador do projeto"
+                        error={!!errors.sponsor}
+                        helperText={errors.sponsor?.message ?? ""}
+                      />
+                    )}
+                  />
+                  <Controller
+                    control={control}
+                    name="sponsoredValue"
+                    render={({ field }) => (
+                      <CurrencyInput
+                        value={field.value}
+                        onChangeValue={(_, value) => {
+                          field.onChange(value);
+                        }}
+                        InputElement={
+                          <TextField
+                            {...field}
+                            fullWidth
+                            disabled={project?.isFinished}
+                            className="max-w-xs mr-2"
+                            label="Valor"
+                            placeholder="Valor do Patrocínio"
+                            error={!!errors.sponsoredValue}
+                            helperText={errors.sponsoredValue?.message ?? ""}
+                          />
+                        }
+                      />
+                    )}
+                  />
+                </div>
               </div>
               <Autocomplete
                 multiple

@@ -26,7 +26,7 @@ import { isRejected } from "@reduxjs/toolkit";
 import { isAfter, isBefore } from "date-fns";
 import { SyntheticEvent, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { FiInfo, FiPackage, FiPlus, FiTrash2, FiUser } from "react-icons/fi";
+import { FiFileText, FiInfo, FiPackage, FiPlus, FiTrash2, FiUser } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { Project } from "../../shared/@types/Project";
 import { ListTooltip } from "../../shared/components/ListTooltip";
@@ -34,6 +34,7 @@ import { LightTooltip } from "../../shared/components/MuiUtils/LightTooltip";
 import {
   changeProjectStatus,
   deleteProjectsById,
+  downloadProjectsCsv,
   findAllProjects,
 } from "../../shared/store/modules/cruds/projectsSlice";
 import { AppDispatch, RootState } from "../../shared/store/store";
@@ -74,6 +75,11 @@ const generateColumns = (handleUpdateStatus: (e: SyntheticEvent, project: Projec
     field: "sponsor",
     headerName: "Patrocinador",
     flex: 1,
+  },
+  {
+    field: "sponsoredValue",
+    headerName: "Valor",
+    flex: 0.5,
   },
   {
     field: "startDate",
@@ -179,6 +185,12 @@ export const Projetos: React.FC = () => {
     const result = await dispatch(changeProjectStatus(project));
     if (isRejected(result)) {
       toast.error("Não foi possível atualizar o status do projeto");
+    }
+  };
+
+  const downloadCsv = async (): Promise<void> => {
+    if (isRejected(await dispatch(downloadProjectsCsv(filters)))) {
+      toast.error("Não foi possível baixar o CSV de projetos. Talvez nenhum projeto se encaixe no filtro enviado.");
     }
   };
 
@@ -323,6 +335,9 @@ export const Projetos: React.FC = () => {
               disabled={!rowSelectionModel.length}
             >
               Remover
+            </Button>
+            <Button startIcon={<FiFileText />} variant="contained" onClick={() => downloadCsv()}>
+              Baixar CSV
             </Button>
             <Button startIcon={<FiPlus />} variant="contained" onClick={() => setIsProjectFormDialogOpen(true)}>
               Adicionar

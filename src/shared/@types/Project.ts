@@ -9,6 +9,7 @@ export interface Project {
     title: string;
     description?: string;
     sponsor?: string;
+    sponsoredValue?: string;
     startDate: Date | null;
     finishDate: Date | null;
     isFinished: boolean;

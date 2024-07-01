@@ -5,8 +5,10 @@ import { RootState } from "../../store";
 import { BaseResultToSave, saveResult } from "./resultSlice";
 
 export const findAllProjects = createAsyncThunk("app/projects/findAllProjects", async (areaId?: string) => {
-    console.log(areaId);
     const response = await api.get("/projects", { params: { areaId } });
+
+    console.log(response.data);
+
     return response.data;
 });
 
@@ -14,6 +16,25 @@ interface DeletePeopleFromProject {
     projectId: string;
     personsIds: string[];
 }
+
+export const downloadProjectsCsv = createAsyncThunk("app/projects/downloadCsv", async (filter: object) => {
+    await api.get(`/projects/csv`, { params: { ...filter }, responseType: "blob" }).then(async (response) => {
+        // create file link in browser's memory
+        const href = URL.createObjectURL(response.request.response);
+        // create "a" HTML element with href to file & click
+        const link = document.createElement("a");
+        link.href = href;
+        link.setAttribute("download", "projects.csv"); //or any other extension
+        document.body.appendChild(link);
+        link.click();
+
+        // clean up "a" element & remove ObjectURL
+        document.body.removeChild(link);
+        URL.revokeObjectURL(href);
+    });
+
+    return;
+});
 
 export const deletePeopleFromProject = createAsyncThunk(
     "app/projects/deleteProjectsById",
@@ -52,9 +73,11 @@ export const saveProject = createAsyncThunk(
                 startDate: payload.startDate,
                 description: payload.description,
                 sponsor: payload.sponsor,
+                sponsoredValue: payload.sponsoredValue,
             });
             project = response.data;
         } else {
+            console.log(payload);
             const responseProject = await api.post<Project>("/projects", payload);
             project = responseProject.data;
         }

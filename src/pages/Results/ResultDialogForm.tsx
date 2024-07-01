@@ -67,9 +67,9 @@ export const ResultDialogForm: React.FC<ResultDialogFormProps> = ({ open, onClos
     watch,
     setValue,
     formState: { errors },
-  } = useForm({
+  } = useForm<DefaultValues>({
     defaultValues,
-    resolver: yupResolver(schema),
+    resolver: yupResolver<any>(schema),
   });
 
   const wProject = watch("project");
