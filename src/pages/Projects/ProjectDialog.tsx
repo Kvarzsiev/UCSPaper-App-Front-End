@@ -333,7 +333,7 @@ export const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ project, .
                     name="sponsoredValue"
                     render={({ field }) => (
                       <CurrencyInput
-                        value={field.value}
+                        value={field.value ?? project?.sponsoredValue}
                         onChangeValue={(_, value) => {
                           field.onChange(value);
                         }}
